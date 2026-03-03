@@ -46,6 +46,9 @@ export default class extends Controller {
       }
     }
 
+    // run onSave every 10 seconds to auto-save the document
+    setInterval(onSave, 10000);
+
     const onPreviewRebuild = async (content, title, postToIframe) => {
       const buildToken = tokenField.value;
       const buildHost = hostField.value;
