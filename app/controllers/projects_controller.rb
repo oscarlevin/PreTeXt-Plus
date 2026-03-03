@@ -49,6 +49,8 @@ class ProjectsController < ApplicationController
   </p>
 </section>
     eos
+    @project.save!
+    redirect_to edit_project_path(@project)
   end
 
   # GET /tryit

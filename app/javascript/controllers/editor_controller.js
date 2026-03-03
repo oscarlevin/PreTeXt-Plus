@@ -26,15 +26,25 @@ export default class extends Controller {
       railsForm.submit();
     }
 
-    // Save with Ctrl+S or Cmd+S
-    document.addEventListener("keydown", function(e) {
-      if ((e.key === 's' || e.key === 'S') && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        if (confirm("Save and exit?")) {
-          railsForm.submit();
+    const onSave = async () => {
+      try {
+        // 4. Send the POST request asynchronously
+        const response = await fetch(railsForm.getAttribute("action"), {
+          method: "POST",
+          body: new FormData(railsForm),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error saving document! Status: ${response.status}`);
         }
+
+        console.log("Success saving document!");
+
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred during submission.");
       }
-    }, false);
+    }
 
     const onPreviewRebuild = async (content, title, postToIframe) => {
       const buildToken = tokenField.value;
@@ -49,6 +59,7 @@ export default class extends Controller {
       title: titleField.value,
       onTitleChange: (v) => titleField.value = v,
       onSaveButton: onSaveButton,
+      onSave: onSave,
       saveButtonLabel: "Save and...",
       onCancelButton: onCancelButton,
       cancelButtonLabel: "Cancel",
