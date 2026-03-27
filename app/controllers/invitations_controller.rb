@@ -55,14 +55,16 @@ class InvitationsController < ApplicationController
       end
       redirect_to projects_path, notice: "Invited all specified emails"
     elsif mode == "accept_request"
-      user = User.find params[:user_id]
-      if user.blank?
-        flash[:notice] = "User cannot be blank"
+      users = User.where id: params[:user_ids]
+      if users.blank?
+        flash[:notice] = "Must choose a user"
         render :new, status: :unprocessable_entity and return
       end
-      Invitation.create! owner_user: @current_user, recipient_user: user
-      InvitationsMailer.invite(user.email, user).deliver_later
-      redirect_to projects_path, notice: "Invited requesting user"
+      users.each do |user|
+        Invitation.create! owner_user: @current_user, recipient_user: user
+        InvitationsMailer.invite(user.email, user).deliver_later
+      end
+      redirect_to projects_path, notice: "Invited requesting users"
     else
       flash[:notice] = "Invalid mode"
       render :new, status: :unprocessable_entity and return

@@ -69,10 +69,10 @@
     <%= form.hidden_field :mode, value: "accept_request" %>
 
     <div class="my-5">
-      <%= form.label :user_id do %>Requesting User<% end %>
-      <%= form.select :user_id, 
+      <%= form.label :user_ids do %>Requesting User<% end %>
+      <%= form.select :user_ids, 
         options_from_collection_for_select(@requests.map(&:user), :id, :name_with_email, params[:user_id]),
-        { required: true },
+        { required: true, multiple: true },
         class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
     </div>
 
