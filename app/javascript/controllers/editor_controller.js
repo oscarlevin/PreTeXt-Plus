@@ -47,7 +47,7 @@ export default class extends Controller {
     }
 
     // run onSave every 10 seconds to auto-save the document
-    setInterval(onSave, 10000);
+    this.autoSaveInterval = setInterval(onSave, 10000);
 
     const onPreviewRebuild = async (content, title, postToIframe) => {
       const buildToken = tokenField.value;
@@ -73,8 +73,9 @@ export default class extends Controller {
   }
 
   disconnect() {
-    const root = this.targets.find("root");
+    clearInterval(this.autoSaveInterval);
 
+    const root = this.targets.find("root");
     this.component.destroy(root);
   }
 }
