@@ -9,3 +9,6 @@ application.register("editor", EditorController)
 
 import TryitController from "./tryit_controller"
 application.register("tryit", TryitController)
+
+import NavbarController from "./navbar_controller"
+application.register("navbar", NavbarController)

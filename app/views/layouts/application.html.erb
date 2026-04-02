@@ -24,7 +24,7 @@
   </head>
 
   <body>
-    <nav class="bg-white px-6 py-4 shadow md:fixed w-full z-10 top-0 left-0 border-b border-gray-200 md:h-16">
+    <nav class="bg-white px-6 py-4 shadow md:fixed w-full z-10 top-0 left-0 border-b border-gray-200 md:h-16" data-controller="navbar">
         <div class="flex flex-col container mx-auto md:flex-row md:items-center md:justify-between">
             <div class="flex justify-between items-center">
                 <div>
@@ -34,13 +34,26 @@
                   <% end %>
                 </div>
             </div>
-            <div class="flex flex-col md:flex-row md:-mx-4" :class="isOpen ? 'block' : ['hidden' , 'md:block']">
+            <div class="flex flex-col md:flex-row md:-mx-4">
                 <%= link_to :projects, class: "my-1 text-gray-800 hover:text-blue-500 md:mx-4 md:my-0" do %>
                   Projects
                 <% end %>
                 <%= link_to :root, class: "my-1 text-gray-800 hover:text-blue-500 md:mx-4 md:my-0" do %>
                   About
                 <% end %>
+                <div class="relative group">
+                  <button class="my-1 text-gray-800 cursor-pointer hover:text-blue-500 md:mx-4 md:my-0" data-action="click->navbar#toggleHelpMenu" data-navbar-target="helpButton">
+                    Help &#9662;
+                  </button>
+                  <div class="hidden absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 md:left-auto md:right-0" data-navbar-target="helpMenu">
+                    <a href="https://pretextbook.org/examples/sample-article/annotated/" target="_blank" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-500 rounded-t-md">
+                      PreTeXt Sample Article
+                    </a>
+                    <a href="https://pretextbook.org/doc/guide/html/" target="_blank" class="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-500">
+                      PreTeXt Guide
+                    </a>
+                  </div>
+                </div>
                 <% if @current_user&.admin %>
                   <%= link_to new_invitation_path, class: "my-1 text-gray-800 hover:text-blue-500 md:mx-4 md:my-0" do %>
                     Invitations
@@ -60,13 +73,13 @@
     </nav>
     <div class="w-full">
       <% if notice.present? or params[:notice].present? %>
-        <div class="relative w-full z-10 flex justify-center cursor-pointer -mb-16" onclick="this.remove()">
+        <div class="relative w-full z-10 flex justify-center cursor-pointer -mb-16" data-action="click->navbar#dismissNotification" data-navbar-target="notification">
           <p class="mt-20 py-2 px-3 bg-blue-100 border-blue-200 border text-blue-500 font-medium rounded-md inline-block">
             ℹ <%= notice.present? ? notice : params[:notice] %>
           </p>
         </div>
       <% elsif alert.present? %>
-        <div class="relative w-full z-10 flex justify-center cursor-pointer -mb-16" onclick="this.remove()">
+        <div class="relative w-full z-10 flex justify-center cursor-pointer -mb-16" data-action="click->navbar#dismissNotification" data-navbar-target="notification">
           <p class="mt-20 py-2 px-3 bg-yellow-100 border-yellow-200 border text-yellow-700 font-medium rounded-md inline-block">⚠ <%= alert %></p>
         </div>
       <% end %>
