@@ -162,8 +162,8 @@ class ProjectsController < ApplicationController
     require "net/http"
     # post params to build server
     post_params = {
-      source: params["source"],
-      title: params["title"],
+      source: params[:source],
+      title: params[:title],
       token: ENV["BUILD_TOKEN"]
     }
     response = Net::HTTP.post_form(URI.parse("https://#{ENV['BUILD_HOST']}"), post_params)
