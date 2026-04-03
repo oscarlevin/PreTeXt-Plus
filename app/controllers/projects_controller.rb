@@ -151,6 +151,13 @@ class ProjectsController < ApplicationController
   end
 
   def preview
+    unless @current_user.present?
+      if session[:preview_count].to_i >= 25
+        render plain: "Sorry, this preview is limited for non-logged in users! Create an account to continue writing and save your work!", status: :forbidden
+        return
+      end
+    end
+    session[:preview_count] = session[:preview_count].to_i + 1
     require "uri"
     require "net/http"
     # post params to build server
