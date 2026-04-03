@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+.navbarMenuToggle + .navbarMenu {
+  display: none;
+}
+
+.navbarMenuToggle:checked + .navbarMenu {
+  display: block;
+}
