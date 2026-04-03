@@ -152,12 +152,15 @@ class ProjectsController < ApplicationController
 
   def preview
     unless @current_user.present?
-      if session[:preview_count].to_i >= 25
+      timestamps = session[:preview_timestamps] || []
+      current_time = Time.now.to_i
+      timestamps.reject! { |t| t < current_time - 600 } # keep only timestamps within the last 10 minutes
+      if timestamps.length >= 25
         render plain: "Sorry, this preview is limited for non-logged in users! Create an account to continue writing and save your work!", status: :forbidden
         return
       end
+      session[:preview_timestamps] = timestamps << current_time
     end
-    session[:preview_count] = session[:preview_count].to_i + 1
     require "uri"
     require "net/http"
     # post params to build server
