@@ -5,6 +5,8 @@ class ProjectsController < ApplicationController
   before_action :limit_projects, only: %i[ new create copy ]
   before_action :require_ownership, only: %i[ show edit update destroy ]
   after_action :allow_iframe, only: :share
+  rate_limit to: 25, within: 10.minutes, only: :preview,
+             with: -> { render plain: "Sorry, this preview is limited! Create an account to continue writing and save your work!", status: :too_many_requests }
 
   # GET /projects or /projects.json
   def index
@@ -122,26 +124,35 @@ class ProjectsController < ApplicationController
   end
 
   def preview
-    unless @current_user.present?
-      timestamps = session[:preview_timestamps] || []
-      current_time = Time.now.to_i
-      timestamps.reject! { |t| t < current_time - 600 } # keep only timestamps within the last 10 minutes
-      if timestamps.length >= 25
-        render plain: "Sorry, this preview is limited for non-logged in users! Create an account to continue writing and save your work!", status: :forbidden
-        return
-      end
-      session[:preview_timestamps] = timestamps << current_time
-    end
     require "uri"
     require "net/http"
-    # post params to build server
     post_params = {
       source: params[:source],
       title: params[:title],
       token: ENV["BUILD_TOKEN"]
     }
-    response = Net::HTTP.post_form(URI.parse("https://#{ENV['BUILD_HOST']}"), post_params)
-    render html: response.body.html_safe
+    uri = URI.parse("https://#{ENV['BUILD_HOST']}")
+    response = Net::HTTP.start(
+      uri.host,
+      uri.port,
+      use_ssl: uri.scheme == "https",
+      open_timeout: 5,
+      read_timeout: 15
+    ) do |http|
+      request = Net::HTTP::Post.new(uri.request_uri)
+      request["Content-Type"] = "application/x-www-form-urlencoded"
+      request.body = URI.encode_www_form(post_params)
+      http.request(request)
+    end
+    if response.is_a?(Net::HTTPSuccess)
+      render html: response.body.html_safe
+    else
+      render plain: "Preview build failed", status: :bad_gateway
+    end
+  rescue Net::OpenTimeout, Net::ReadTimeout
+    render plain: "Preview build timed out", status: :gateway_timeout
+  rescue SocketError, EOFError, IOError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SystemCallError
+    render plain: "Preview build failed", status: :bad_gateway
   end
 
   private
