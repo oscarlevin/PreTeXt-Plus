@@ -20,8 +20,7 @@ module BuildServerHelper
     fake_http.define_singleton_method(:request) { |_req| fake_response }
 
     if raise_error
-      error_to_raise = raise_error
-      Net::HTTP.stub(:start, proc { |*_args, &_blk| raise error_to_raise }, &test_block)
+      Net::HTTP.stub(:start, proc { |*_args, &_blk| raise raise_error }, &test_block)
     else
       Net::HTTP.stub(:start, proc { |*_args, &http_block| http_block.call(fake_http) }, &test_block)
     end
