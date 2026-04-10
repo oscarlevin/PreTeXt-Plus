@@ -145,11 +145,8 @@ class ProjectsController < ApplicationController
       request.body = URI.encode_www_form(post_params)
       http.request(request)
     end
-    if response.is_a?(Net::HTTPSuccess)
-      render html: response.body.html_safe
-    else
-      render plain: "Preview build failed", status: :bad_gateway
-    end
+    # return html along with the status returned by build server
+    render html: response.body.html_safe, status: response.code
   rescue Net::OpenTimeout, Net::ReadTimeout
     render plain: "Preview build timed out", status: :gateway_timeout
   rescue SocketError, EOFError, IOError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SystemCallError
