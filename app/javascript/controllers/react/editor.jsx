@@ -11,6 +11,7 @@ function EditorWrapper({ onContentChange, onTitleChange, ...rest }) {
     title: titleProp,
     sourceFormat: sourceFormatProp,
     pretextSource: pretextSourceProp,
+    docinfo: docinfoProp,
     ...editorProps
   } = rest;
 
@@ -18,12 +19,15 @@ function EditorWrapper({ onContentChange, onTitleChange, ...rest }) {
   const [title, setTitle] = useState(titleProp);
   const [sourceFormat, setSourceFormat] = useState(sourceFormatProp);
   const [pretextSource, setPretextSource] = useState(pretextSourceProp);
+  const [docinfo, setDocinfo] = useState(docinfoProp);
 
   const handleContentChange = useCallback((v, meta) => {
     const nextSource = v ?? meta?.sourceContent ?? "";
     setSource(nextSource);
-    if (meta?.sourceFormat) setSourceFormat(meta.sourceFormat);
-    if (meta?.pretextSource) setPretextSource(meta.pretextSource);
+    if (meta?.sourceFormat !== undefined) setSourceFormat(meta.sourceFormat);
+    if (meta?.pretextSource !== undefined) setPretextSource(meta.pretextSource);
+    // docinfo changes arrive via meta when DocinfoEditor saves inside Editors
+    if (meta?.docinfo !== undefined) setDocinfo(meta.docinfo);
     onContentChange?.(nextSource, meta);
   }, [onContentChange]);
 
@@ -39,6 +43,7 @@ function EditorWrapper({ onContentChange, onTitleChange, ...rest }) {
       title={title}
       sourceFormat={sourceFormat}
       pretextSource={pretextSource}
+      docinfo={docinfo}
       onContentChange={handleContentChange}
       onTitleChange={handleTitleChange}
     />

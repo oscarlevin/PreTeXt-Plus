@@ -1,25 +1,60 @@
 class Project < ApplicationRecord
   belongs_to :user
 
-  enum :source_format, { pretext: 0, latex: 1, pmd: 2 }, suffix: true
-  enum :document_type, { article: 0, book: 1, slideshow: 2 }, suffix: true
+  enum :source_format, { pretext: 0, latex: 1, pmd: 2 }, default: :pretext, suffix: true, validate: true
+  enum :document_type, { article: 0, book: 1, slideshow: 2 }, default: :article, suffix: true, validate: true
 
   before_update :set_html_source
 
   default_scope { order(updated_at: :desc) }
 
-  def self.default_content_for(source_format)
-    case source_format.to_s
-    when "latex"
-      DEFAULT_LATEX_CONTENT
-    when "pmd"
-      DEFAULT_PMD_CONTENT
-    else
-      DEFAULT_PRETEXT_CONTENT
+  # Wraps the project source in a full PreTeXt document, including docinfo.
+  def full_pretext_source
+    if latex_source_format? && pretext_source.blank?
+      return source.to_s
+    end
+    doc_tag = document_type || "article"
+
+    xml = +"<pretext>"
+    xml << docinfo.to_s if docinfo.present?
+    xml << "<#{doc_tag} label=\"article\">"
+    xml << "<title>#{title}</title>" if title.present?
+    xml << (latex_source_format? ? pretext_source.to_s : source.to_s)
+    xml << "</#{doc_tag}>"
+    xml << "</pretext>"
+    xml
+  end
+
+  def self.default_docinfo
+    DEFAULT_DOCINFO
+  end
+
+  def set_default_source
+    if pretext_source_format?
+      self.source = DEFAULT_PRETEXT_SOURCE
+    elsif pmd_source_format?
+      self.source  = DEFAULT_PMD_SOURCE
+    else  # latex
+      self.source = DEFAULT_LATEX_SOURCE
     end
   end
 
-  DEFAULT_PRETEXT_CONTENT = <<~XML
+  def set_default_docinfo
+    self.docinfo = DEFAULT_DOCINFO
+  end
+
+  def to_h
+    [ :title, :source, :source_format, :pretext_source, :docinfo ]
+      .map { |attr| [ attr, self.send(attr) ] }.to_h
+  end
+
+  DEFAULT_DOCINFO = <<~XML
+    <docinfo>
+      <brandlogo source="icon.svg" />
+    </docinfo>
+  XML
+
+  DEFAULT_PRETEXT_SOURCE = <<~XML
     <section>
       <title> Welcome to PreTeXt.Plus! </title>
 
@@ -44,21 +79,22 @@ class Project < ApplicationRecord
     </section>
   XML
 
-  DEFAULT_LATEX_CONTENT = <<~LATEX
+  DEFAULT_LATEX_SOURCE = <<~LATEX
     \\section{Welcome to PreTeXt.Plus!}
 
-    This is a sample project to get you started. You can edit this content using \\latex.
+    This is a sample project to get you started. You can edit this content using markup that should
+    look just like LaTeX. For example, you can write math using LaTeX syntax:
 
     \\[
       \\left|\\sum_{i=0}^n a_i\\right| \\leq \\sum_{i=0}^n |a_i|
     \\]
 
-    For more information, visit \\url{https://pretextbook.org/doc/guide/html/}.
+    Not all LaTeX is supported, but that's a good thing.  Writing in LaTeX-style PreTeXt will ensure your content can be built by PreteXt and will be accessible!
 
     Feel free to delete this sample content and start creating your own project. Happy writing!
   LATEX
 
-  DEFAULT_PMD_CONTENT = <<~PMD
+  DEFAULT_PMD_SOURCE = <<~PMD
     # Welcome to PreTeXt.Plus!
 
     This is a sample project to get you started. You can edit this content using PreTeXt Markdown.
@@ -77,11 +113,10 @@ class Project < ApplicationRecord
   def set_html_source
     require "uri"
     require "net/http"
-    # For LaTeX projects, use the editor-converted PreTeXt content for building;
-    # fall back to raw content if the conversion hasn't been stored yet.
-    build_source = (latex_source_format? && pretext_source.present?) ? pretext_source : source
+    # For LaTeX projects, use the editor-converted PreTeXt body and wrap it
+    # into a full document so docinfo/title are included in server builds.
     params = {
-      source: build_source,
+      source: full_pretext_source,
       title: self.title,
       token: ENV["BUILD_TOKEN"]
     }

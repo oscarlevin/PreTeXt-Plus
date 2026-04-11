@@ -1,9 +1,9 @@
 class ProjectsController < ApplicationController
   allow_unauthenticated_access only: %i[ share preview ]
   require_unauthenticated_access only: %i[ tryit ]
-  before_action :set_project, only: %i[ show edit update destroy ]
+  before_action :set_project, only: %i[ show edit update destroy editor_state update_editor_state ]
   before_action :limit_projects, only: %i[ new create copy ]
-  before_action :require_ownership, only: %i[ show edit update destroy ]
+  before_action :require_ownership, only: %i[ show edit update destroy editor_state update_editor_state ]
   after_action :allow_iframe, only: :share
   rate_limit to: 25, within: 10.minutes, only: :preview,
              with: -> { render plain: "Preview limit reached. Please wait a few minutes and try again, or create an account to continue writing and save your work!", status: :too_many_requests },
@@ -32,7 +32,7 @@ class ProjectsController < ApplicationController
   <title> Thanks for trying PreTeXt.Plus! </title>
 
   <p>
-    This is a sample project to show you what PreTeXt.Plus can do.
+    This is a very simple project to show you what PreTeXt.Plus can do.
     You can edit its content using the PreTeXt markup language.
     <me>
       \\left|\\sum_{i=0}^n a_i\\right|\\leq\\sum_{i=0}^n|a_i|
@@ -58,6 +58,14 @@ class ProjectsController < ApplicationController
   </p>
 </section>
     eos
+    @docinfo = <<-eos
+<docinfo>
+<macros>
+\\newcommand{\\N}{\\mathbb N}
+</macros>
+<brandlogo source="icon.svg" />
+</docinfo>
+    eos
   end
 
   # GET /projects/1/edit
@@ -66,11 +74,12 @@ class ProjectsController < ApplicationController
 
   # POST /projects or /projects.json
   def create
-    @project = Project.new(safe_project_params)
+    @project = Project.new project_params
     @project.user = @current_user
-    @project.source_format ||= :pretext
+    @project.source_format = :pretext if @project.source_format.blank?
     @project.title = "New Project" if @project.title.blank?
-    @project.source = Project.default_content_for(@project.source_format)
+    @project.set_default_source
+    @project.set_default_docinfo
 
     respond_to do |format|
       if @project.save
@@ -86,7 +95,7 @@ class ProjectsController < ApplicationController
   # PATCH/PUT /projects/1 or /projects/1.json
   def update
     respond_to do |format|
-      if @project.update(safe_project_params)
+      if @project.update(project_params)
         format.html { redirect_to @project, notice: "Project was successfully updated.", status: :see_other }
         format.json { render :show, status: :ok, location: @project }
       else
@@ -106,9 +115,23 @@ class ProjectsController < ApplicationController
     end
   end
 
+  # GET /projects/:id/editor_state
+  def editor_state
+    render json: @project.to_h
+  end
+
+  # PATCH /projects/:id/editor_state
+  def update_editor_state
+    if @project.update(project_params)
+      render json: @project.to_h
+    else
+      render json: { errors: @project.errors }, status: :unprocessable_entity
+    end
+  end
+
   def share
     @project = Project.find(params.expect(:project_id))
-    render html: (@project.html_source || "").html_safe
+    render html: (@project.html_source || "Document not found.").html_safe
   end
 
   # GET /projects/:project_id/share/copy
@@ -161,22 +184,7 @@ class ProjectsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def project_params
-      params.expect(project: [ :title, :source, :pretext_source, :source_format, :document_type ])
-    end
-
-    # Strips enum fields to known values before mass-assignment so invalid
-    # inputs produce nil (handled by validations) rather than ArgumentError.
-    def safe_project_params
-      p = project_params
-      p[:source] = p.delete(:content) if p.key?(:content) && !p.key?(:source)
-      p[:pretext_source] = p.delete(:pretext_content) if p.key?(:pretext_content) && !p.key?(:pretext_source)
-      if p.key?(:source_format)
-        p[:source_format] = p[:source_format].presence_in(Project.source_formats.keys)
-      end
-      if p.key?(:document_type)
-        p[:document_type] = p[:document_type].presence_in(Project.document_types.keys)
-      end
-      p
+      params.expect(project: [ :title, :source, :pretext_source, :source_format, :docinfo ])
     end
 
     # redirect if user has too many projects
