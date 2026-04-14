@@ -155,7 +155,9 @@ class ProjectsController < ApplicationController
   end
 
   def share
-    render html: (@project.html_source || "Document not found").html_safe
+    if @project.user.has_copiable_projects?
+      render html: (@project.html_source || "Document not found").html_safe
+    end
   end
 
   def source

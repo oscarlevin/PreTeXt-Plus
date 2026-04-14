@@ -65,6 +65,12 @@
                     Account (<%= @current_user.email %>)
                   <% end %>
                 <% else %>
+                  <%= link_to new_user_path, class: "my-1 text-gray-800 hover:text-blue-500 md:mx-4 md:my-0" do %>
+                    Create account
+                  <% end %>
+                  <%= link_to new_session_path, class: "my-1 text-gray-800 hover:text-blue-500 md:mx-4 md:my-0" do %>
+                    Sign in
+                  <% end %>
                   <%= link_to tryit_path, class: "my-1 text-gray-800 hover:text-blue-500 md:mx-4 md:my-0", data: { turbo: false } do %>
                     Try it!
                   <% end %>
