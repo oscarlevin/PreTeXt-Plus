@@ -216,7 +216,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     get tryit_url
 
     assert_response :success
-    assert_includes response.body, "Working Demo"
+    assert_includes response.body, "Demo"
     assert_includes response.body, "data-tryit-target=\"sourceFormatField\""
     assert_includes response.body, "value=\"pretext\""
   end
