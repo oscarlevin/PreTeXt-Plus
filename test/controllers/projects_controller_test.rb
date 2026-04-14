@@ -130,7 +130,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     @user.update!(subscription: :sustaining)
     stub_build_server do
       assert_difference("Project.count") do
-        post project_copy_url(@project)
+        post copy_project_url(@project)
       end
     end
     copy = Project.find_by!(title: "Copy of #{@project.title}", user: @user)
@@ -140,7 +140,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
   test "copy is blocked for beta subscribers" do
     @user.update!(subscription: :beta, admin: false)
     assert_no_difference("Project.count") do
-      post project_copy_url(@project)
+      post copy_project_url(@project)
     end
     assert_redirected_to projects_path
   end
@@ -157,7 +157,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
 
     stub_build_server do
       assert_difference("Project.count", 1) do
-        post project_copy_url(other_project)
+        post copy_project_url(other_project)
       end
     end
     copied = Project.find_by!(title: "Copy of #{other_project.title}", user: requester)
@@ -175,7 +175,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(requester)
 
     assert_difference("Project.count", 1) do
-      post project_copy_url(other_project)
+      post copy_project_url(other_project)
     end
     copied = Project.find_by!(title: "Copy of #{other_project.title}", user: requester)
     assert_redirected_to edit_project_path(copied)
