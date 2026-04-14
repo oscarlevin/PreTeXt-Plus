@@ -38,9 +38,6 @@ export default class extends Controller {
       postToIframe("/projects/preview", { source: assembledSource, title, authenticity_token: authenticityToken });
     }
 
-    const onSaveButton = () => {};
-
-    const onCancelButton = () => {};
 
     const props = {
       source: current.source,
