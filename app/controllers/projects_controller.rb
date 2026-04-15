@@ -155,7 +155,9 @@ class ProjectsController < ApplicationController
   end
 
   def share
-    render html: (@project.html_source || "Document not found").html_safe
+    if @project.user.has_copiable_projects? and @current_user != @project.user
+      render html: (@project.html_source || "Document not found").html_safe
+    end
   end
 
   def source
@@ -202,11 +204,7 @@ class ProjectsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_project
-      if params[:id].present?
-        @project = Project.find(params.expect(:id))
-      else
-        @project = Project.find(params.expect(:project_id))
-      end
+      @project = Project.find(params.expect(:id))
     end
 
     # Only allow a list of trusted parameters through.
