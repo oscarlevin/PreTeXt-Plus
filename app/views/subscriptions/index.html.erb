@@ -1,0 +1,15 @@
+<% content_for :title, "Manage Subscription Plans" %>
+
+<% if @subscriptions.present? %>
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8">
+    <% @subscriptions.each do |subscription| %>
+      <%= render "card", subscription: subscription %>
+    <% end %>
+  </div>
+<% else %>
+  <p>Your account has not purchased any subscriptions.</p>
+<% end %>
+
+<h2 class="text-xl mb-2 mt-20">Subscription Status</h2>
+
+<%= render "subscriptions/status", user: @current_user %>

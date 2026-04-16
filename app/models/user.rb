@@ -7,7 +7,11 @@ class User < ApplicationRecord
   after_create_commit :claim_intended_invitations
   after_create_commit :invite_edu_user
 
-  enum :subscription, { beta: 0, sustaining: 1 }, default: :beta, suffix: true, validate: true
+  pay_customer stripe_attributes: ->(pay_customer) { { metadata: { user_id: pay_customer.owner_id } } },
+    default_payment_processor: :stripe
+  has_many :subscription_seats
+
+  enum :old_subscription, { beta: 0, sustaining: 1 }, default: :beta, suffix: true, validate: true
 
   normalizes :email, with: ->(e) { e.strip.downcase }
 
@@ -15,7 +19,17 @@ class User < ApplicationRecord
   validates :password, length: { minimum: 1 }, allow_nil: true
 
   def invited?
-    Invitation.where(recipient_user: self).exists?
+    Invitation.where(recipient_user: self).exists? || subscribed? || admin
+  end
+
+  def subscribed?
+    self.subscription_seats.any? { |s| s.grants_privileges? }
+  end
+
+  def subscribed_until
+    active_seats = self.subscription_seats.select { |s| s.grants_privileges? }
+    return nil if active_seats.empty?
+    active_seats.map { |s| s.subscription.current_period_end }.max
   end
 
   def requested_invitation?
@@ -31,14 +45,14 @@ class User < ApplicationRecord
   end
 
   def project_quota
-    return 10_000 if self.admin
-    return 0 unless self.invited?
-    return 100 if self.sustaining_subscription?
+    return 10_000 if admin
+    return 0 unless invited?
+    return 100 if subscribed?
     10
   end
 
   def has_copiable_projects?
-    self.sustaining_subscription? or self.admin?
+    subscribed? || admin
   end
 
   private

@@ -1,4 +1,16 @@
 Rails.application.routes.draw do
+  get "subscriptions/invoice" => "subscriptions#invoice_request", as: "invoice_request"
+  post "subscriptions/invoice" => "subscriptions#submit_invoice_request", as: "submit_invoice_request"
+  resources :subscriptions, only: [ :index, :show ] do
+    member do
+      post "seat" => "subscriptions#seat", as: "seat"
+    end
+  end
+  resources :subscription_types do
+    member do
+      get "checkout" => "subscription_types#checkout", as: "checkout"
+    end
+  end
   resources :requests, only: [ :create ]
   resource :session
   resources :passwords, param: :token
@@ -21,8 +33,8 @@ Rails.application.routes.draw do
     end
   end
   post "projects/preview" => "projects#preview", as: "preview"
-  post "subscribe" => "subscriptions#subscribe"
-  post "stripe/webhooks" => "subscriptions#webhooks"
+  post "subscribe" => "subscriptions_old#subscribe"
+  post "stripe/webhooks" => "subscriptions_old#webhooks"
   get "tryit" => "projects#tryit"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

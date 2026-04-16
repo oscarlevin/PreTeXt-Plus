@@ -4,7 +4,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @project = projects(:one)
     @user = users(:one)
-    post session_path, params: { email: @user.email, password: "password" }
+    post session_path, params: { email: @user.email, password: "password123" }
   end
 
   test "should get index" do
@@ -126,35 +126,32 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "copy creates a duplicate for sustaining subscriber" do
-    @user.update!(subscription: :sustaining)
+  test "copy creates a duplicate for subscriber" do
+    subbed_user = users(:subscribed)
+    delete session_path
+    sign_in_as(subbed_user)
     stub_build_server do
       assert_difference("Project.count") do
         post copy_project_url(@project)
       end
     end
-    copy = Project.find_by!(title: "Copy of #{@project.title}", user: @user)
+    copy = Project.find_by!(title: "Copy of #{@project.title}", user: subbed_user)
     assert_redirected_to edit_project_path(copy)
   end
 
-  test "copy is blocked for beta subscribers" do
-    @user.update!(subscription: :beta, admin: false)
+  test "copy is blocked for basic subscribers" do
+    @user.update!(admin: false)
     assert_no_difference("Project.count") do
       post copy_project_url(@project)
     end
     assert_redirected_to projects_path
   end
 
-  test "copy allows sustaining requester to copy another user's project" do
-    owner = users(:one)
-    owner.update!(subscription: :beta, admin: false)
-    requester = users(:two)
-    requester.update!(subscription: :sustaining, admin: false)
+  test "copy allows subscribed requester to copy another user's project" do
+    requester = users(:subscribed)
     other_project = projects(:one)
-
     delete session_path
     sign_in_as(requester)
-
     stub_build_server do
       assert_difference("Project.count", 1) do
         post copy_project_url(other_project)
@@ -164,12 +161,11 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to edit_project_path(copied)
   end
 
-  test "copy allows beta requester when source owner is sustaining" do
-    owner = users(:one)
-    owner.update!(subscription: :sustaining, admin: false)
+  test "copy allows basic requester when source owner is subscribed" do
+    owner = users(:subscribed)
     requester = users(:two)
-    requester.update!(subscription: :beta, admin: false)
     other_project = projects(:one)
+    other_project.update_column(:user_id, owner.id)
 
     delete session_path
     sign_in_as(requester)
@@ -177,6 +173,7 @@ class ProjectsControllerTest < ActionDispatch::IntegrationTest
     assert_difference("Project.count", 1) do
       post copy_project_url(other_project)
     end
+
     copied = Project.find_by!(title: "Copy of #{other_project.title}", user: requester)
     assert_redirected_to edit_project_path(copied)
   end
