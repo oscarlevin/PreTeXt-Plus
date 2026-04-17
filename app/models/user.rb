@@ -23,7 +23,7 @@ class User < ApplicationRecord
   end
 
   def subscribed?
-    self.subscription_seats.any? { |s| s.grants_privileges? }
+    sustaining_old_subscription? || self.subscription_seats.any? { |s| s.grants_privileges? }
   end
 
   def subscribed_until
