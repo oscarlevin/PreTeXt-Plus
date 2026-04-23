@@ -93,6 +93,11 @@ export default class extends Controller {
     this.saveInterval = setInterval(onSave, 10000);
 
     const onPreviewRebuild = (content, title, postToIframe) => {
+      // For non-pretext projects the editor passes the converted pretextSource as
+      // `content`.  Keep current in sync so onSave has the latest value.
+      if (current.sourceFormat !== "pretext") {
+        current.pretextSource = content ?? "";
+      }
       const assembledSource = assemblePreviewSource({
         content,
         title: current.title,
@@ -105,6 +110,70 @@ export default class extends Controller {
         title,
         authenticity_token: csrfToken,
       });
+    };
+
+    const onCreatePretextProjectCopy = async (request) => {
+      try {
+        const savedSuccessfully = await onSave(true);
+        if (!savedSuccessfully) throw new Error("Failed to save current project");
+
+        const response = await fetch(
+          `/projects/${this.projectIdValue}/copy_conversion`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+              "X-CSRF-Token": csrfToken,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || `Failed to create converted copy: ${response.status}`);
+        }
+
+        const result = await response.json();
+        // Redirect to the new project's editor
+        window.location.href = result.project_url;
+      } catch (error) {
+        console.error("Error creating converted copy:", error);
+        alert(`Failed to create converted copy:\n${error.message}`);
+      }
+    };
+
+    const onFeedbackSubmit = async (feedback) => {
+      try {
+        const response = await fetch("/projects/feedback", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-CSRF-Token": csrfToken,
+          },
+          body: JSON.stringify({
+            context: feedback.context,
+            message: feedback.message,
+            email: feedback.email,
+            project_url: feedback.projectUrl,
+            current_source: feedback.currentSource,
+            source_format: feedback.sourceFormat,
+            title: feedback.title,
+            submitted_at: feedback.submittedAt,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || `Failed to submit feedback: ${response.status}`);
+        }
+
+        console.log("Feedback submitted successfully");
+      } catch (error) {
+        console.error("Error submitting feedback:", error);
+        alert(`Failed to submit feedback: ${error.message}`);
+      }
     };
 
     this.component.render(root, {
@@ -127,6 +196,8 @@ export default class extends Controller {
       onCancelButton,
       cancelButtonLabel: "Cancel",
       onPreviewRebuild,
+      onCreatePretextProjectCopy,
+      onFeedbackSubmit,
     });
   }
 

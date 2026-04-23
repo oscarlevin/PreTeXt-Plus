@@ -35,10 +35,12 @@ Rails.application.routes.draw do
       get "share/source" => "projects#source", as: "share_source"
       get "share/copy", to: redirect("projects/%{project_id}/share/source")
       post "share/copy" => "projects#copy", as: "copy"
+      post "copy_conversion" => "projects#copy_conversion", as: "copy_conversion"
       get "*/lunr-pretext-search-index.js", to: redirect("/ptx-search.js")
     end
   end
   post "projects/preview" => "projects#preview", as: "preview"
+  post "projects/feedback" => "projects#feedback", as: "feedback"
   post "subscribe" => "subscriptions_old#subscribe"
   post "stripe/webhooks" => "subscriptions_old#webhooks"
   get "tryit" => "projects#tryit"

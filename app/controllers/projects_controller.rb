@@ -1,8 +1,8 @@
 class ProjectsController < ApplicationController
   allow_unauthenticated_access only: %i[ share preview source ]
   require_unauthenticated_access only: %i[ tryit ]
-  before_action :set_project, only: %i[ show edit update destroy editor_state update_editor_state share source copy ]
-  before_action :limit_projects, only: %i[ new create copy ]
+  before_action :set_project, only: %i[ show edit update destroy editor_state update_editor_state share source copy copy_conversion ]
+  before_action :limit_projects, only: %i[ new create copy copy_conversion ]
   before_action :require_ownership, only: %i[ show edit update destroy editor_state update_editor_state ]
   before_action :require_copy_permission, only: %i[ source copy ]
   after_action :allow_iframe, only: :share
@@ -170,6 +170,27 @@ class ProjectsController < ApplicationController
     redirect_to edit_project_path(project_copy)
   end
 
+  # POST /projects/:id/copy_conversion
+  def copy_conversion
+    # pretext_source = params[:pretext_source]
+    # title = params[:title]
+
+    # return render json: { error: "Missing pretext_source or title" }, status: :bad_request if pretext_source.blank? || title.blank?
+
+    project_copy = @project.dup
+    project_copy.user = @current_user
+    project_copy.title = @project.title
+    project_copy.source = @project.pretext_source
+    project_copy.source_format = :pretext
+    project_copy.pretext_source = ""  # Clear pretext_source since source is already in pretext format
+
+    if project_copy.save
+      render json: { project_id: project_copy.id, project_url: edit_project_path(project_copy) }, status: :created
+    else
+      render json: { error: project_copy.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   def preview
     require "uri"
     require "net/http"
@@ -199,6 +220,28 @@ class ProjectsController < ApplicationController
     render plain: "Preview build failed", status: :bad_gateway
   end
 
+  # POST /projects/feedback
+  def feedback
+    feedback_data = {
+      context: params[:context],
+      message: params[:message],
+      email: params[:email],
+      project_url: params[:project_url],
+      current_source: params[:current_source],
+      source_format: params[:source_format],
+      title: params[:title],
+      submitted_at: params[:submitted_at],
+      user: @current_user
+    }
+
+    FeedbackMailer.feedback_submission(feedback_data).deliver_later
+
+    render json: { status: "success" }, status: :accepted
+  rescue StandardError => e
+    Rails.logger.error("Feedback submission error: #{e.message}")
+    render json: { error: "Failed to submit feedback" }, status: :internal_server_error
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_project
@@ -213,7 +256,15 @@ class ProjectsController < ApplicationController
     # redirect if user has too many projects
     def limit_projects
       if @current_user.projects.count >= @current_user.project_quota
-        redirect_to projects_path, alert: "Project quota (#{@current_user.project_quota}) cannot be exceeded"
+        quota_message = "Project quota (#{@current_user.project_quota}) cannot be exceeded.  Consider upgrading your subscription for more projects and to support PreTeXt.Plus!"
+
+        # For AJAX requests, return JSON
+        if request.format.json?
+          return render json: { error: quota_message }, status: :unprocessable_entity
+        end
+
+        # For regular requests, redirect
+        redirect_to projects_path, alert: quota_message
       end
     end
 
