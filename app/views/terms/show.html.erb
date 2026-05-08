@@ -1,14 +1,23 @@
 <% content_for(:title, @term_title) %>
 
 <div class="mx-auto xl:w-3/4 px-12 w-full py-4">
+  <% updated_at_local = @term.updated_at.localtime %>
 
   <h1 class="text-4xl">
     <%= @term_title %>
-    <span class="text-lg text-gray-700">Last updated on <%= @term.created_at %></span>
+    <br>
+    <span class="text-lg text-gray-700">
+      Last updated on
+      <%= tag.time(
+            updated_at_local.strftime('%B %-d, %Y'),
+            datetime: @term.updated_at.iso8601,
+            title: updated_at_local.strftime('%B %-d, %Y at %-I:%M %p %Z')
+          ) %>
+    </span>
   </h1>
 
-  <pre class="mt-4">
-    <%= @term.content %>
-  </pre>
+  <div class="prose prose-slate mt-4 max-w-none">
+    <%= render_markdown(@term.content) %>
+  </div>
 
 </div>
