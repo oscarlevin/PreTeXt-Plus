@@ -3,8 +3,11 @@ Rails.application.routes.draw do
     root "dashboard#show"
     resources :users, only: %i[index show]
     resources :projects, only: %i[show]
+    resources :terms, only: %i[new create]
   end
 
+  get "tos" => "terms#tos", as: "tos"
+  get "privacy" => "terms#privacy", as: "privacy"
   get "subscriptions/invoice" => "subscriptions#invoice_request", as: "invoice_request"
   post "subscriptions/invoice" => "subscriptions#submit_invoice_request", as: "submit_invoice_request"
   resources :subscriptions, only: [ :index, :show ] do
