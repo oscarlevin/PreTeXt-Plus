@@ -93,11 +93,11 @@ describe("assemblePreviewSource", () => {
     });
   });
 
-  describe("other formats (pmd)", () => {
+  describe("other formats (markdown)", () => {
     it("returns content as-is when no docinfo", () => {
       const result = assemblePreviewSource({
         content: "# Hello\n\nWorld",
-        sourceFormat: "pmd",
+        sourceFormat: "markdown",
         pretextSource: "",
         docinfo: "",
       });

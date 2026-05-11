@@ -40,11 +40,11 @@
                 "A subset of the classic typesetting language compatible with PreTeXt.",
                 "ring-orange-100 hover:ring-orange-200 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50",
                 true ],
-              [ "pmd",
+              [ "markdown",
                 "Markdown-style PreTeXt",
                 "Flavor of the popular lightweight markup language compatible with PreTeXt.",
                 "ring-purple-100 hover:ring-purple-200 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50",
-                false ]
+                true ]
             ] %>
           <% format_labels.each do |value, title, description, colors, enabled| %>
             <%= label_tag nil, 
@@ -57,7 +57,7 @@
                 <span class="hidden sm:grid sm:size-20 sm:shrink-0 sm:place-content-center" aria-hidden="true">
                   <% if value == "latex" %>
                     <%= image_tag "latex-pretext-logo.svg", alt: "PreTeXt logo", class: enabled ? nil : "opacity-30" %>
-                  <% elsif value == "pmd" %>
+                  <% elsif value == "markdown" %>
                     <%= image_tag "markdown-pretext-logo.svg", alt: "PreTeXt logo", class: enabled ? nil : "opacity-30" %>
                   <% else %>
                     <%= image_tag "pretext-logo.svg", alt: "PreTeXt logo", class: enabled ? nil : "opacity-30" %>
