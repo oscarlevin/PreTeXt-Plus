@@ -1,5 +1,5 @@
 <% content_for :title, "Showing #{@project.title}" %>
-
+<% content_for :full_screen_content do %>
 <div class="size-full md:flex md:flex-row">
     <div class="w-full md:w-1/4 md:h-full p-5 flex flex-col">
       <h2 class="text-3xl font-semibold">Project: <span class="text-gray-600 font-normal text-xl"><%= @project.title %></span></h2>
@@ -22,3 +22,4 @@
       <%= render @project %>
     </div>
 </div>
+<% end %>
