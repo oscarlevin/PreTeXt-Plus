@@ -7,6 +7,15 @@ export default class extends Controller {
     this.componentPromise = import("./react/editor");
   }
 
+  notifyLayoutChange() {
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("resize"));
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("resize"));
+      });
+    });
+  }
+
   async connect() {
     this.component = await this.componentPromise;
 
@@ -56,6 +65,7 @@ export default class extends Controller {
     };
 
     this.component.render(root, props);
+    this.notifyLayoutChange();
   }
 
   disconnect() {

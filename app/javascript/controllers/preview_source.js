@@ -9,7 +9,7 @@
  *
  * @param {Object} opts
  * @param {string} opts.content       - Raw editor content (may be latex or pretext fragment).
- * @param {string} opts.sourceFormat  - "pretext" | "latex" | "pmd"
+ * @param {string} opts.sourceFormat  - "pretext" | "latex" | "markdown"
  * @param {string} [opts.pretextSource] - Client-converted PreTeXt body for latex projects.
  * @param {string} [opts.docinfo]     - Optional <docinfo> block string.
  * @returns {string} Assembled source ready to POST to the build server.

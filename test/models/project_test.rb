@@ -11,8 +11,8 @@ class ProjectTest < ActiveSupport::TestCase
     assert_includes content, "\\section{"
   end
 
-  test "default_content_for returns pmd template" do
-    content = Project::DEFAULT_PMD_SOURCE
+  test "default_content_for returns markdown template" do
+    content = Project::DEFAULT_MARKDOWN_SOURCE
     assert_includes content, "# Welcome to PreTeXt.Plus!"
   end
 

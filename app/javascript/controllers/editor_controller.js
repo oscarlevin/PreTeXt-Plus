@@ -9,6 +9,15 @@ export default class extends Controller {
     this.componentPromise = import("./react/editor");
   }
 
+  notifyLayoutChange() {
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("resize"));
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("resize"));
+      });
+    });
+  }
+
   async connect() {
     this.component = await this.componentPromise;
 
@@ -215,6 +224,7 @@ export default class extends Controller {
       onCreatePretextProjectCopy,
       onFeedbackSubmit,
     });
+    this.notifyLayoutChange();
   }
 
   disconnect() {

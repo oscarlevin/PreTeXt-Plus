@@ -1,7 +1,7 @@
 class Project < ApplicationRecord
   belongs_to :user
 
-  enum :source_format, { pretext: 0, latex: 1, pmd: 2 }, default: :pretext, suffix: true, validate: true
+  enum :source_format, { pretext: 0, latex: 1, markdown: 2 }, default: :pretext, suffix: true, validate: true
   enum :document_type, { article: 0, book: 1, slideshow: 2 }, default: :article, suffix: true, validate: true
 
   before_update :set_html_source
@@ -19,7 +19,7 @@ class Project < ApplicationRecord
     xml << effective_docinfo.to_s if effective_docinfo.present?
     xml << "<#{doc_tag} label=\"article\">"
     xml << "<title>#{title}</title>" if title.present?
-    xml << (latex_source_format? ? pretext_source.to_s : source.to_s)
+    xml << (pretext_source.present? ? pretext_source.to_s : source.to_s)
     xml << "</#{doc_tag}>"
     xml << "</pretext>"
     xml
@@ -40,8 +40,8 @@ class Project < ApplicationRecord
   def set_default_source
     if pretext_source_format?
       self.source = DEFAULT_PRETEXT_SOURCE
-    elsif pmd_source_format?
-      self.source  = DEFAULT_PMD_SOURCE
+    elsif markdown_source_format?
+      self.source  = DEFAULT_MARKDOWN_SOURCE
     else  # latex
       self.source = DEFAULT_LATEX_SOURCE
     end
@@ -106,10 +106,10 @@ class Project < ApplicationRecord
     Feel free to delete this sample content and start creating your own project. Happy writing!
   LATEX
 
-  DEFAULT_PMD_SOURCE = <<~PMD
+  DEFAULT_MARKDOWN_SOURCE = <<~MARKDOWN
     # Welcome to PreTeXt.Plus!
 
-    This is a sample project to get you started. You can edit this content using PreTeXt Markdown.
+    This is a sample project to get you started. You can edit this content using _PreTeXt Markdown_.
 
     $$
       \\left|\\sum_{i=0}^n a_i\\right| \\leq \\sum_{i=0}^n |a_i|
@@ -118,7 +118,13 @@ class Project < ApplicationRecord
     For more information, visit https://pretextbook.org/doc/guide/html/.
 
     Feel free to delete this sample content and start creating your own project. Happy writing!
-  PMD
+
+    Theorem:
+      PreTeXt can be used in Markdown mode.
+
+      Proof:
+        See this document.
+  MARKDOWN
 
   private
 

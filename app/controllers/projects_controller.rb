@@ -27,8 +27,10 @@ class ProjectsController < ApplicationController
 
   # GET /tryit
   def tryit
-    @demo_mode = params[:demo] == "latex" ? "latex" : "pretext"
-    @title = @demo_mode == "latex" ? "Try LaTeX-style PreTeXt!" : "Try it!"
+    @demo_mode = params[:demo] == "latex" ? "latex" :
+      params[:demo] == "markdown" ? "markdown" : "pretext"
+    @title = @demo_mode == "latex" ? "Try LaTeX-style PreTeXt!" :
+      @demo_mode == "markdown" ? "Try Markdown-style PreTeXt!" : "Try it!"
 
     @content = if @demo_mode == "latex"
       <<~EOS
@@ -41,6 +43,25 @@ class ProjectsController < ApplicationController
         \\]
 
         When you preview the changes, the source is first converted to PreTeXt and then rendered as accessible HTML.#{' '}
+
+        (Changes you make here will not be saved, but feel free to play around to see what PreTeXt.Plus can do!)
+      EOS
+    elsif @demo_mode == "markdown"
+      <<~EOS
+        # Thanks for trying PreTeXt.Plus!
+
+        This is a Markdown-style PreTeXt demo project. You can edit this content using supported Markdown syntax.
+
+        $$
+          \left|\sum_{i=0}^n a_i\right| \leq \sum_{i=0}^n |a_i|
+        $$
+
+        When you preview the changes, the source is first converted to PreTeXt and then rendered as accessible HTML.#{' '}
+
+        Theorem:
+          PreTeXt can be used in markdown mode.
+          Proof:
+            See this document.
 
         (Changes you make here will not be saved, but feel free to play around to see what PreTeXt.Plus can do!)
       EOS
@@ -73,10 +94,10 @@ class ProjectsController < ApplicationController
         </section>
 
         <section>
-          <title>New: Try LaTeX-style PreTeXt!</title>
+          <title>New: Try LaTeX-style PreTeXt or Markdown-style PreTeXt!</title>
 
           <p>
-            PreTeXt.Plus now supports writing in LaTeX-style PreTeXt. Most LaTeX commands are supported, and the environments from PreTeXt are what you expect.  Give it a try by switching modes above.
+            PreTeXt.Plus now supports writing in LaTeX-style and Markdown-style PreTeXt. Most commands are supported, and the environments from PreTeXt are what you expect.  Give it a try by switching modes above.
           </p>
         </section>
       EOS
