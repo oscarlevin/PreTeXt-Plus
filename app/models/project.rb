@@ -19,7 +19,7 @@ class Project < ApplicationRecord
     xml << effective_docinfo.to_s if effective_docinfo.present?
     xml << "<#{doc_tag} label=\"article\">"
     xml << "<title>#{title}</title>" if title.present?
-    xml << (latex_source_format? ? pretext_source.to_s : source.to_s)
+    xml << (pretext_source.present? ? pretext_source.to_s : source.to_s)
     xml << "</#{doc_tag}>"
     xml << "</pretext>"
     xml
